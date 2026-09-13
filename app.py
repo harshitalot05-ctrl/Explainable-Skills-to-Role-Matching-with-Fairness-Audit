@@ -7,24 +7,82 @@ import pandas as pd
 import plotly.express as px
 
 
-# Load job roles
+# ============================================================
+# PAGE CONFIGURATION
+# ============================================================
+
+st.set_page_config(
+    page_title="Skills-to-Role Matching",
+    page_icon="🎯",
+    layout="wide"
+)
+
+
+# ============================================================
+# CUSTOM STYLING
+# ============================================================
+
+st.markdown("""
+<style>
+    .main {
+        padding-top: 2rem;
+    }
+
+    h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+
+    h2, h3 {
+        font-weight: 600;
+    }
+
+    .stButton > button {
+        width: 100%;
+        border-radius: 8px;
+        height: 3rem;
+        font-weight: 600;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ============================================================
+# LOAD JOB ROLES
+# ============================================================
+
 roles = pd.read_csv("data/roles.csv")
 
 
-# Page title
-st.title("Explainable Skills-to-Role Matching")
+# ============================================================
+# PAGE HEADER
+# ============================================================
 
-st.write("Paste your resume text below:")
+st.title("🎯 Explainable Skills-to-Role Matching")
+
+st.markdown(
+    "### Resume Analysis • Role Recommendation • Explainability • Fairness Audit"
+)
+
+st.divider()
 
 
-# Resume upload
+# ============================================================
+# RESUME INPUT
+# ============================================================
+
+st.write("Upload your resume or paste your resume text below:")
+
 uploaded_file = st.file_uploader(
     "Upload your resume",
     type=["txt", "pdf", "docx"]
 )
 
 
-# Read resume
+# ============================================================
+# READ RESUME
+# ============================================================
+
 if uploaded_file is not None:
 
     resume_text = extract_text_from_file(uploaded_file)
@@ -37,25 +95,44 @@ if uploaded_file is not None:
 
 else:
 
-    resume_text = st.text_area("Resume")
+    resume_text = st.text_area(
+        "Resume",
+        height=200
+    )
 
 
-# Analyze button
+# ============================================================
+# ANALYZE RESUME
+# ============================================================
+
 if st.button("Analyze Resume"):
 
-    # Extract skills
+    # --------------------------------------------------------
+    # EXTRACT SKILLS
+    # --------------------------------------------------------
+
     skills = extract_skills(resume_text)
 
-    st.subheader("Skills Found")
 
     if skills:
 
+        # ----------------------------------------------------
+        # SKILLS FOUND
+        # ----------------------------------------------------
+
+        st.subheader("🧠 Skills Found")
+
         st.write(skills)
 
-        # Role matching
-        st.subheader("Role Matching")
+
+        # ----------------------------------------------------
+        # ROLE MATCHING
+        # ----------------------------------------------------
+
+        st.subheader("💼 Role Matching")
 
         results = []
+
 
         for _, row in roles.iterrows():
 
@@ -82,12 +159,21 @@ if st.button("Analyze Resume"):
         )
 
 
-        # Display table
-        st.dataframe(results_df)
+        # ----------------------------------------------------
+        # RESULTS TABLE
+        # ----------------------------------------------------
+
+        st.dataframe(
+            results_df,
+            use_container_width=True
+        )
 
 
-        # Match score chart
-        st.subheader("Role Match Scores")
+        # ----------------------------------------------------
+        # MATCH SCORE CHART
+        # ----------------------------------------------------
+
+        st.subheader("📊 Role Match Scores")
 
         fig = px.bar(
             results_df,
@@ -102,7 +188,10 @@ if st.button("Analyze Resume"):
         )
 
 
-        # Best role
+        # ----------------------------------------------------
+        # BEST ROLE
+        # ----------------------------------------------------
+
         best_role = results_df.iloc[0]
 
         st.success(
@@ -112,29 +201,134 @@ if st.button("Analyze Resume"):
         )
 
 
-        # Get skills required by recommended role
+        # ----------------------------------------------------
+        # GET REQUIRED SKILLS
+        # ----------------------------------------------------
+
         role_skills = roles[
             roles["role"] == best_role["Role"]
         ].iloc[0]["skills"]
 
 
-        # Generate explanation
+        # ----------------------------------------------------
+        # GENERATE EXPLANATION
+        # ----------------------------------------------------
+
         matched_skills, missing_skills = get_explanation(
             skills,
             role_skills
         )
 
 
-        # Explanation
-        st.subheader("Why this role was recommended")
+        # ----------------------------------------------------
+        # EXPLANATION
+        # ----------------------------------------------------
+
+        st.subheader("🔍 Why this role was recommended")
 
 
         st.write("✅ Matched Skills")
+
         st.write(matched_skills)
 
 
         st.write("❌ Missing Skills")
+
         st.write(missing_skills)
+
+
+        # ====================================================
+        # FAIRNESS AUDIT
+        # ====================================================
+
+        st.divider()
+
+        st.subheader("⚖️ Fairness Audit")
+
+        st.caption(
+            "Fairness evaluation using demonstration data "
+            "for the academic project."
+        )
+
+
+        fairness_data = pd.read_csv(
+            "data/fairness_eval.csv"
+        )
+
+
+        # Group A scores
+        group_a_scores = fairness_data[
+            fairness_data["Group"] == "Group_A"
+        ]["Match_Score"].tolist()
+
+
+        # Group B scores
+        group_b_scores = fairness_data[
+            fairness_data["Group"] == "Group_B"
+        ]["Match_Score"].tolist()
+
+
+        # Average scores
+        average_a = sum(group_a_scores) / len(group_a_scores)
+
+        average_b = sum(group_b_scores) / len(group_b_scores)
+
+
+        # Fairness gap
+        fairness_gap = abs(
+            average_a - average_b
+        )
+
+
+        # ----------------------------------------------------
+        # FAIRNESS RESULTS
+        # ----------------------------------------------------
+
+        col1, col2, col3 = st.columns(3)
+
+
+        with col1:
+
+            st.metric(
+                "Group A Average",
+                f"{average_a:.2f}%"
+            )
+
+
+        with col2:
+
+            st.metric(
+                "Group B Average",
+                f"{average_b:.2f}%"
+            )
+
+
+        with col3:
+
+            st.metric(
+                "Fairness Gap",
+                f"{fairness_gap:.2f}%"
+            )
+
+
+        # Fairness interpretation
+        if fairness_gap <= 5:
+
+            st.success(
+                "✅ Low difference between the two groups."
+            )
+
+        elif fairness_gap <= 10:
+
+            st.warning(
+                "⚠️ Moderate difference between the two groups."
+            )
+
+        else:
+
+            st.error(
+                "🚨 High difference between the two groups."
+            )
 
 
     else:
@@ -142,40 +336,3 @@ if st.button("Analyze Resume"):
         st.warning(
             "No skills found in the resume."
         )
-
-        # Fairness Audit
-st.subheader("⚖️ Fairness Audit")
-
-fairness_data = pd.read_csv("data/fairness_eval.csv")
-
-group_a_scores = fairness_data[
-    fairness_data["Group"] == "Group_A"
-]["Match_Score"].tolist()
-
-group_b_scores = fairness_data[
-    fairness_data["Group"] == "Group_B"
-]["Match_Score"].tolist()
-
-average_a = sum(group_a_scores) / len(group_a_scores)
-average_b = sum(group_b_scores) / len(group_b_scores)
-
-fairness_gap = abs(average_a - average_b)
-
-st.write(
-    f"Average Match Score - Group A: {average_a:.2f}%"
-)
-
-st.write(
-    f"Average Match Score - Group B: {average_b:.2f}%"
-)
-
-st.write(
-    f"Fairness Gap: {fairness_gap:.2f} percentage points"
-)
-
-if fairness_gap <= 5:
-    st.success("✅ Low difference between the two groups.")
-elif fairness_gap <= 10:
-    st.warning("⚠️ Moderate difference between the two groups.")
-else:
-    st.error("🚨 High difference between the two groups.")
