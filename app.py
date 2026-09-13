@@ -1,5 +1,6 @@
 import streamlit as st
 from src.skill_extraction import extract_skills
+from src.resume_parser import extract_text_from_file
 from src.role_recommendation import calculate_match
 from src.explainability import get_explanation
 import pandas as pd
@@ -11,15 +12,15 @@ st.title("Explainable Skills-to-Role Matching")
 st.write("Paste your resume text below:")
 uploaded_file = st.file_uploader(
     "Upload your resume",
-    type=["txt"]
+    type=["txt", "pdf", "docx"]
 )
 
 
 if uploaded_file is not None:
-    resume_text = uploaded_file.read().decode("utf-8")
+    resume_text = extract_text_from_file(uploaded_file)
+    st.text_area("Extracted Resume Text", resume_text, height=200)
 else:
     resume_text = st.text_area("Resume")
-
 if st.button("Analyze Resume"):
 
     skills = extract_skills(resume_text)
