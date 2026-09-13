@@ -142,3 +142,40 @@ if st.button("Analyze Resume"):
         st.warning(
             "No skills found in the resume."
         )
+
+        # Fairness Audit
+st.subheader("⚖️ Fairness Audit")
+
+fairness_data = pd.read_csv("data/fairness_eval.csv")
+
+group_a_scores = fairness_data[
+    fairness_data["Group"] == "Group_A"
+]["Match_Score"].tolist()
+
+group_b_scores = fairness_data[
+    fairness_data["Group"] == "Group_B"
+]["Match_Score"].tolist()
+
+average_a = sum(group_a_scores) / len(group_a_scores)
+average_b = sum(group_b_scores) / len(group_b_scores)
+
+fairness_gap = abs(average_a - average_b)
+
+st.write(
+    f"Average Match Score - Group A: {average_a:.2f}%"
+)
+
+st.write(
+    f"Average Match Score - Group B: {average_b:.2f}%"
+)
+
+st.write(
+    f"Fairness Gap: {fairness_gap:.2f} percentage points"
+)
+
+if fairness_gap <= 5:
+    st.success("✅ Low difference between the two groups.")
+elif fairness_gap <= 10:
+    st.warning("⚠️ Moderate difference between the two groups.")
+else:
+    st.error("🚨 High difference between the two groups.")
