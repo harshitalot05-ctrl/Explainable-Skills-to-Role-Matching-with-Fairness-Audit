@@ -26,4 +26,6 @@ def extract_skills(text):
 
     for skill in SKILLS:
         if skill in text:
-            found_skills.append(s
+            found_skills.append(skill)
+
+    return found_skills

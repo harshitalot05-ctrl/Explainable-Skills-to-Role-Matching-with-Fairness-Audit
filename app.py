@@ -9,8 +9,16 @@ roles = pd.read_csv("data/roles.csv")
 st.title("Explainable Skills-to-Role Matching")
 
 st.write("Paste your resume text below:")
+uploaded_file = st.file_uploader(
+    "Upload your resume",
+    type=["txt"]
+)
 
-resume_text = st.text_area("Resume")
+
+if uploaded_file is not None:
+    resume_text = uploaded_file.read().decode("utf-8")
+else:
+    resume_text = st.text_area("Resume")
 
 if st.button("Analyze Resume"):
 
