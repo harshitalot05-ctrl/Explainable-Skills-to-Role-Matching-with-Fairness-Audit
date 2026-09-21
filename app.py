@@ -113,7 +113,6 @@ if st.button("Analyze Resume"):
 
     skills = extract_skills(resume_text)
 
-
     if skills:
 
         # ----------------------------------------------------
@@ -133,7 +132,6 @@ if st.button("Analyze Resume"):
 
         results = []
 
-
         for _, row in roles.iterrows():
 
             score, matched = calculate_match(
@@ -148,11 +146,14 @@ if st.button("Analyze Resume"):
             })
 
 
-        # Create results table
+        # ----------------------------------------------------
+        # CREATE RESULTS TABLE
+        # ----------------------------------------------------
+
         results_df = pd.DataFrame(results)
 
 
-        # Sort by match score
+        # Sort by exact skill match
         results_df = results_df.sort_values(
             "Match Score (%)",
             ascending=False
@@ -226,11 +227,9 @@ if st.button("Analyze Resume"):
 
         st.subheader("🔍 Why this role was recommended")
 
-
         st.write("✅ Matched Skills")
 
         st.write(matched_skills)
-
 
         st.write("❌ Missing Skills")
 
@@ -256,25 +255,37 @@ if st.button("Analyze Resume"):
         )
 
 
-        # Group A scores
+        # ----------------------------------------------------
+        # GROUP A SCORES
+        # ----------------------------------------------------
+
         group_a_scores = fairness_data[
             fairness_data["Group"] == "Group_A"
         ]["Match_Score"].tolist()
 
 
-        # Group B scores
+        # ----------------------------------------------------
+        # GROUP B SCORES
+        # ----------------------------------------------------
+
         group_b_scores = fairness_data[
             fairness_data["Group"] == "Group_B"
         ]["Match_Score"].tolist()
 
 
-        # Average scores
+        # ----------------------------------------------------
+        # AVERAGE SCORES
+        # ----------------------------------------------------
+
         average_a = sum(group_a_scores) / len(group_a_scores)
 
         average_b = sum(group_b_scores) / len(group_b_scores)
 
 
-        # Fairness gap
+        # ----------------------------------------------------
+        # FAIRNESS GAP
+        # ----------------------------------------------------
+
         fairness_gap = abs(
             average_a - average_b
         )
@@ -311,7 +322,10 @@ if st.button("Analyze Resume"):
             )
 
 
-        # Fairness interpretation
+        # ----------------------------------------------------
+        # FAIRNESS INTERPRETATION
+        # ----------------------------------------------------
+
         if fairness_gap <= 5:
 
             st.success(
